@@ -1,7 +1,6 @@
 pragma solidity ^0.4.2;
 
 contract Roulette {
-	uint public lastRoundTimestamp;
     uint public nextRoundTimestamp;
     uint _interval;
     address _owner;
@@ -16,29 +15,16 @@ contract Roulette {
     Bet[] public bets;
 
     event Finished(uint number, uint nextRoundTimestamp);
-
+    event NewSingleBet(uint bet, address player, uint number, uint value);
+    
     function Roulette(uint interval) payable {
 	    _interval = interval;
 	    _owner = msg.sender;
 	    nextRoundTimestamp = now + _interval;
     }
 
-    function getOwner() public constant returns(address) {
-        return _owner;
-    }
-
-    function getInterval() public constant returns(uint) {
-        return _interval;
-    }
-
-    function betSingle(uint number) payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Single) {
-        if (number > 36) throw;
-        bets.push(Bet({
-            betType: BetType.Single,
-            player: msg.sender,
-            number: number,
-            value: msg.value
-        }));
+    function getNextRoundTimestamp() public constant returns(uint) {
+        return nextRoundTimestamp;
     }
 
     function getBetsCountAndValue() public constant returns(uint, uint) {
@@ -47,6 +33,36 @@ contract Roulette {
             value += bets[i].value;
         }
         return (bets.length, value);
+    }
+
+    function betSingle(uint number) payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Single) {
+
+        if (number > 36) throw;
+        bets.push(Bet({
+            betType: BetType.Single,
+            player: msg.sender,
+            number: number,
+            value: msg.value
+        }));
+        NewSingleBet(bets.length,msg.sender,number,msg.value);
+    }
+
+    function betEven() payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Even) {
+        bets.push(Bet({
+            betType: BetType.Even,
+            player: msg.sender,
+            number: 0,
+            value: msg.value
+        }));
+    }
+
+    function betOdd() payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Even) {
+        bets.push(Bet({
+            betType: BetType.Odd,
+            player: msg.sender,
+            number: 0,
+            value: msg.value
+        }));
     }
 
     function launch() public {
@@ -79,7 +95,6 @@ contract Roulette {
 
         uint thisRoundTimestamp = nextRoundTimestamp;
         nextRoundTimestamp = thisRoundTimestamp + _interval;
-        lastRoundTimestamp = thisRoundTimestamp;
 
         bets.length = 0;
 
@@ -90,24 +105,6 @@ contract Roulette {
         if (betType == BetType.Single) return 35;
         if (betType == BetType.Even || betType == BetType.Odd) return 2;
         return 0;
-    }
-
-    function betEven() payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Even) {
-        bets.push(Bet({
-            betType: BetType.Even,
-            player: msg.sender,
-            number: 0,
-            value: msg.value
-        }));
-    }
-
-    function betOdd() payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Even) {
-        bets.push(Bet({
-            betType: BetType.Odd,
-            player: msg.sender,
-            number: 0,
-            value: msg.value
-        }));
     }
 
     modifier transactionMustContainEther() {
