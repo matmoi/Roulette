@@ -8,8 +8,22 @@
 </head>
 <body>
   <h1>Roulette</h1>
+  <h2>You are <span class="black"><small><span id="player"></span></small></span></h2>
   <h3>You have <span class="black"><span id="balance"></span> ether</span></h3>
 
+  <table>
+    <caption>bets</caption>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Player</th>
+        <th>Type/number</th> 
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody id="bets">
+    </tbody>
+  </table>
   <!--<br>
   <h1>Send</h1>
   <br><label for="amount">Amount:</label><input type="text" id="amount" placeholder="e.g., 95"></input>
