@@ -12,34 +12,38 @@ function refreshBalance() {
   balance_element.innerHTML = value.valueOf();
 };
 
-// function sendCoin() {
-//   var meta = Roulette.deployed();
-
-//   var amount = parseInt(document.getElementById("amount").value);
-//   var receiver = document.getElementById("receiver").value;
-
-//   setStatus("Initiating transaction... (please wait)");
-
-//   meta.sendCoin(receiver, amount, {from: account}).then(function() {
-//     setStatus("Transaction complete!");
-//     refreshBalance();
-//   }).catch(function(e) {
-//     console.log(e);
-//     setStatus("Error sending coin; see log.");
-//   });
-// };
-
 function watchNewBets() {
   var roulette = Roulette.deployed();
   roulette.NewSingleBet(function(error, result) {
       if (error) {
         console.log(error);
-        setStatus("Error on new single bet; see log.");
       } else {
         var row = document.getElementById("bets").insertRow(-1);
         row.insertCell(-1).innerHTML = result.args.bet.toNumber();
         row.insertCell(-1).innerHTML = result.args.player;
         row.insertCell(-1).innerHTML = result.args.number.toNumber();
+        row.insertCell(-1).innerHTML = web3.fromWei(result.args.value.toNumber());
+      }
+  });
+  roulette.NewEvenBet(function(error, result) {
+      if (error) {
+        console.log(error);
+      } else {
+        var row = document.getElementById("bets").insertRow(-1);
+        row.insertCell(-1).innerHTML = result.args.bet.toNumber();
+        row.insertCell(-1).innerHTML = result.args.player;
+        row.insertCell(-1).innerHTML = "Even";
+        row.insertCell(-1).innerHTML = web3.fromWei(result.args.value.toNumber());
+      }
+  });
+  roulette.NewOddBet(function(error, result) {
+      if (error) {
+        console.log(error);
+      } else {
+        var row = document.getElementById("bets").insertRow(-1);
+        row.insertCell(-1).innerHTML = result.args.bet.toNumber();
+        row.insertCell(-1).innerHTML = result.args.player;
+        row.insertCell(-1).innerHTML = "Odd";
         row.insertCell(-1).innerHTML = web3.fromWei(result.args.value.toNumber());
       }
   });
@@ -53,8 +57,30 @@ function watchFinishedRound() {
         setStatus("Error end of round; see log.");
       } else {
         document.getElementById("bets").innerHTML = '';
+        document.getElementById("outcome_number").innerHTML = result.args.number.toNumber();
       }
+      refreshBalance();
   });
+}
+
+function newBet() {
+  var roulette = Roulette.deployed();
+  var select = document.getElementById("new_bet_type");
+  var type = select.options[select.selectedIndex].value;
+  var value = document.getElementById("new_bet_value").value;
+  if (type === "even") {
+    roulette.betEven({from: account, value: web3.toWei(value), gas: 2000000});
+  } else if (type === "odd") {
+    roulette.betOdd({from: account, value: web3.toWei(value), gas: 2000000});
+  } else {
+    roulette.betSingle(parseInt(type),{from: account, value: web3.toWei(value), gas: 2000000});
+  }
+  refreshBalance();
+}
+
+function launch() {
+  var roulette = Roulette.deployed();
+  roulette.launch({from: account});
 }
 
 window.onload = function() {
@@ -72,8 +98,9 @@ window.onload = function() {
     account = accounts[0];
 
     document.getElementById("player").innerHTML = account;
-    refreshBalance();
 
+    refreshBalance();
     watchNewBets();
+    watchFinishedRound();
   });
 }

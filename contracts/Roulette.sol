@@ -16,6 +16,8 @@ contract Roulette {
 
     event Finished(uint number, uint nextRoundTimestamp);
     event NewSingleBet(uint bet, address player, uint number, uint value);
+    event NewEvenBet(uint bet, address player, uint value);
+    event NewOddBet(uint bet, address player, uint value);
     
     function Roulette(uint interval) payable {
 	    _interval = interval;
@@ -36,7 +38,6 @@ contract Roulette {
     }
 
     function betSingle(uint number) payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Single) {
-
         if (number > 36) throw;
         bets.push(Bet({
             betType: BetType.Single,
@@ -54,6 +55,7 @@ contract Roulette {
             number: 0,
             value: msg.value
         }));
+        NewEvenBet(bets.length,msg.sender,msg.value);
     }
 
     function betOdd() payable public transactionMustContainEther() bankMustBeAbleToPayForBetType(BetType.Even) {
@@ -63,6 +65,7 @@ contract Roulette {
             number: 0,
             value: msg.value
         }));
+        NewOddBet(bets.length,msg.sender,msg.value);
     }
 
     function launch() public {
