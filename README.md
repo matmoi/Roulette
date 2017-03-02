@@ -88,7 +88,9 @@ truffle migrate
 
 or alternatively `npm run migrate`. To proceed, truffle uses the files under `./migrations`. As the order matters here, each file has a prefix with a number. In `2_deploy_contracts.js`, we can observe how a new Roulette is created :
 
-```deployer.deploy(Roulette,0,{from: web3.eth.accounts[0], value: web3.toWei(1000, "ether")});```
+```
+deployer.deploy(Roulette,0,{from: web3.eth.accounts[0], value: web3.toWei(1000, "ether")});
+```
 
 The `_interval` parameter sent to the constructor is set to 0. It basically means that players don't necessarly have to wait between two runs (it's purely to make our automated tests easier). We also specify the address of the sending account and the value transfered to the smart contract in Wei. In this example, account 0 creates a Roulette smart contract with 1000 Ethers (why not ? so far it's just fake Ether... But be careful if you want to deploy this smart contract in the "real" Ethereum blockchain), which will be the initial bank fund to pay back potential winners.
 
@@ -101,11 +103,15 @@ As an example we wrote three tests in `roulette.js`, each one of them is identif
 
 The first one is fairly simple, we make sure that our smart contract is credited with 1000 Ethers as explicitly described in `2_deploy_contracts.js`. For that, we retrieve the current balance of our smart contract :
 
-```var balance = web3.fromWei(web3.eth.getBalance(roulette.address), "ether").toNumber();```
+```
+var balance = web3.fromWei(web3.eth.getBalance(roulette.address), "ether").toNumber();
+```
 
 and makes sure it equals 1000 :
 
-```assert.equal(balance.valueOf(), 1000, `Smart contract is credited with ${balance.valueOf()} Ether, expected 1000.`);```
+```
+assert.equal(balance.valueOf(), 1000, `Smart contract is credited with ${balance.valueOf()} Ether, expected 1000.`);
+```
 
 Second test covers Solidity [events](http://solidity.readthedocs.io/en/develop/contracts.html#events). An event is a callback function allowing our javascript code to be aware of predefined actions happening in a smart contract. In our case, we use events to notify all the observers when a participant puts a bet. Just like in real life, anyone around the table has the possibility to know who bets what.
 Because we wait for an event that might never happen, it's safe to set a timeout for this test. That's done by using the timeout option, 10 seconds should be enough :
@@ -131,7 +137,9 @@ var event = roulette.NewSingleBet(function(error, result) {
 Each event produces a result and potentially an error. The result contains the parameters indicated in the event prototype, aka. `event NewSingleBet(uint bet, address player, uint number, uint value);` : the bet number, the account address of the gambler, the roulette number on which the bet is put and the amount in Ethers. If an error figures in the event callback, we consider that the test fails, otherwise it succeeds. Last instruction, `event.stopWatching()`, simply removes this observer on NewSingleBet events.
 Once our observer is setup, we place a single bet from account 0 of 1 Ether on number 12 :
 
-```roulette.betSingle(12,{from: web3.eth.accounts[0], value: web3.toWei(1, "ether")});```
+```
+roulette.betSingle(12,{from: web3.eth.accounts[0], value: web3.toWei(1, "ether")});
+```
 
 and wait for the corresponding event to be triggered.
 
