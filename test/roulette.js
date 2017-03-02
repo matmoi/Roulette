@@ -1,9 +1,9 @@
 contract('Roulette', function() {
-  it("smart contract should be created with 1000 ethers", () => {
+  it("smart contract should be created with 1000 ethers", function() {
     var roulette = Roulette.deployed();
 
     var balance = web3.fromWei(web3.eth.getBalance(roulette.address), "ether").toNumber();
-    assert.equal(balance.valueOf(), 1000, `1000 wasn't in the smart contract, but ${balance.valueOf()}`);
+    assert.equal(balance.valueOf(), 1000, `Smart contract is credited with ${balance.valueOf()}, expected 1000.`);
   });
 
   it("create a single bet, wait for NewSingleBet event", function(done) {
@@ -27,7 +27,7 @@ contract('Roulette', function() {
 
     var balance = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[1]), "ether").toNumber();
 
-    //even before betting and spinning the wheel, watch Finished events to check account[1]'s balance based on roulette result
+    //even before betting and spinning the roulette, watch Finished events to check account[1]'s balance based on roulette result
     var event = roulette.Finished(function(error, result) {
         if (error) {
             done(error);
@@ -40,7 +40,7 @@ contract('Roulette', function() {
                 assert.isAbove(new_balance,balance,`Result: ${number} => it's a win`);
             } else {
                 //lost
-                assert.isBelow(new_balance,balance,`Result: ${number} => it's a lost`);
+                assert.isBelow(new_balance,balance,`Result: ${number} => it's a loss`);
             }
             done();
         }

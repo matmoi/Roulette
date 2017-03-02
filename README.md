@@ -43,7 +43,12 @@ function Roulette(uint interval) payable {
 
 There are 3 different methods to bet : `betSingle(uint number)`, `betEven()` and `betOdd()`. The first one is to bet on a single number and potentially win 35 times your stake, the two following come out of the number being even or odd (0 excluded) and allow you to win twice your stake in case of success. Those methods have three [modifiers](http://solidity.readthedocs.io/en/develop/contracts.html#modifiers), a modifier is similar to a decorator in python: it allows you to easily modify the behavior of a function. The first modifier, `payable`, is provided by solidity directly and allows to receive Ether together with a call. The two others are defined in `Roulette.sol`, `transactionMustContainEther()` makes sure bet contains some Ether, `bankMustBeAbleToPayForBetType()` verify if the bank has enough fund to satisfy all the bets. In case of failure, both modifiers throw an exception such as the bet is rejected.
 
-Last function is `launch()` and allows any player to toss as soon as the minimal interval of time is obeyed (defined by `_interval`, in second). In solidity there is no possible way to perform actions at regular intervals, similarly to `setInterval()` in Javascript: a transaction must be processed in a limited amount of time. The idea here is to let players decide whenever they are ready by giving them access to the `launch()` function. It's also possible to limit this feature only to the smart contract's, or any other entity that can be assimilated to the bank.
+Last function is `launch()` and allows any player to toss as soon as the minimal interval of time is obeyed (defined by `_interval`, in second). In solidity there is no possible way to perform actions at regular intervals, similarly to `setInterval()` in Javascript: a transaction must be processed in a limited amount of time. The idea here is to let players decide whenever they are ready by giving them access to the `launch()` function. It's also possible to limit this feature only to the smart contract's creator, or any other entity that can be assimilated to the bank.
+Secondly, Solidity doesn't allow the generation of pseudo-random numbers as the blockchain must return the exact same result regardless of which node executes the transaction. To simulate a random int number between [0,36], we are actually using the hash of the last block :
+
+``` uint(block.blockhash(block.number - 1)) % 37 ```
+
+Keep in mind that it is in theory possible to manipulate the outcome result, even though it's complicated and expensive. To make our roulette more robust we could also use the hash of the previous `n` blocks.
 
 > Note on `Migrations.sol`
 > Truffle provides by default a smart contract named `Migrations.sol` when using the `truffle init` command, but it is not a mandatory feature. It aims to record all the previous migrations directly in the blockchain. More details [here](https://truffle.readthedocs.io/en/latest/getting_started/migrations/).
@@ -57,7 +62,7 @@ Ethereum smart contracts written in Solidity must be compiled before being deplo
 or using the command `npm run compile` defined in our package.json, which is simply an alias for the commande above.
 For each smart contract, the compilation will generate an artifact file under `./build/contracts`. In our case we get both `Migrations.sol.js` and `Roulette.sol.js`, which contain the signature API to interact with our smart contracts from Javascript using [web3](https://github.com/ethereum/web3.js).
 
-## Deploy
+## Deployment in a test environment
 
 You have previously compiled your smart contracts and generate their corresponding artifact files. Now it's time to deploy them in the blockchain. For the purpose of testing, we are going to use testrpc to simulate a Ethereum node client locally instead of using the real Ethereum network, which would have the big disavantage of consuming "real" gas. In Ethereum, all transactions have a cost (expressed in "gas"), and you must provide some gas if you want your transaction to be mined by other nodes of the network. The mechanism is fully described in [this article](https://www.cryptocompare.com/coins/guides/what-is-the-gas-in-ethereum/).
 
@@ -75,7 +80,7 @@ testrpc --account="0x40e16bbfe219ecaa733169b9192604338d0c55d48a3c90dae45badaede6
 
 Basically, we start testrpc with two accounts, credited with 1000 Ether each.
 
-Once testrpc is started, we can use truffle to deploy the smart contract through our local node. The command would be :
+Once testrpc has started, we can use truffle to deploy the smart contract through our local node. The command would be :
 
 ```
 truffle migrate
@@ -85,10 +90,49 @@ or alternatively `npm run migrate`. To proceed, truffle uses the files under `./
 
 ```deployer.deploy(Roulette,0,{from: web3.eth.accounts[0], value: web3.toWei(1000, "ether")});```
 
-The constructor parameter, `_interval`, is set to 0. This basically means that players don't have to wait between two runs (it's purely to make our tests easier here). We also specify the address of the sending account and the value transfered to the transaction in Wei. In this example, account 0 creates a Roulette with 100 Ethers, it's gonna be the bank reserve.
+The `_interval` parameter sent to the constructor is set to 0. It basically means that players don't necessarly have to wait between two runs (it's purely to make our automated tests easier). We also specify the address of the sending account and the value transfered to the smart contract in Wei. In this example, account 0 creates a Roulette smart contract with 1000 Ethers (why not ? so far it's just fake Ether... But be careful if you want to deploy this smart contract in the "real" Ethereum blockchain), which will be the initial bank fund to pay back potential winners.
 
 ## Testing
 
-Truffle also provide a support for testing our smart contracts. The command `truffle test` will execute all the tests available under `./test` using the test framwwork [mochajs](http://mochajs.org/).
+Truffle also provides a tool for testing our smart contracts. The command `truffle test` will execute all the tests available under `./test`. Those tests are written in javascript and based
+ on [mochajs](http://mochajs.org/) framework, with slight upgrades explained in [here](http://truffleframework.com/docs/getting_started/javascript-tests) to make your life easier.
 
-## Running the web interface
+As an example we wrote three tests in `roulette.js`, each one of them is identified by the `it(...)` control structure. First instruction in the test block looking as `var roulette = Roulette.deployed();` allows us to retrieve the smart contract deployed in our local node (see section above).
+
+The first one is fairly simple, we make sure that our smart contract is credited with 1000 Ethers as explicitly described in `2_deploy_contracts.js`. For that, we retrieve the current balance of our smart contract :
+
+```var balance = web3.fromWei(web3.eth.getBalance(roulette.address), "ether").toNumber();```
+
+and makes sure it equals 1000 :
+
+```assert.equal(balance.valueOf(), 1000, `Smart contract is credited with ${balance.valueOf()} Ether, expected 1000.`);```
+
+Second test covers Solidity (events)[http://solidity.readthedocs.io/en/develop/contracts.html#events]. An event is a callback function allowing our javascript code to be aware of predefined actions happening in a smart contract. In our case, we use events to notify all the observers when a participant puts a bet. Just like in real life, anyone around the table has the possibility to know who bets what.
+Because we wait for an event that might never happen, it's safe to set a timeout for this test. That's done by using the timeout option, 10 seconds should be enough :
+
+```this.timeout(10000);```
+
+We also have to inform mochajs that this test is asynchronous by using a callback function named `done` as a parameter in the test declaration. That way, it will wait for `done(...)` to be called or raise a timeout after 10 seconds. An optional parameter can be passed to the callback function, which basically indicate that the test failed.
+First thing in our test, we define an observer on NewSingleBet events defined in our smart contract (see `Roulette.sol`), such as :
+
+```
+var event = roulette.NewSingleBet(function(error, result) {
+	if (error) {
+		done(error);
+	} else {
+		done();
+	}
+	event.stopWatching();
+});
+```
+
+Each event produces a result and potentially an error. The result contains the parameters indicated in the event prototype, aka. `event NewSingleBet(uint bet, address player, uint number, uint value);` : the bet number, the account address of the gambler, the roulette number on which the bet is put and the amount in Ethers. If an error figures in the event callback, we consider that the test fails, otherwise it succeeds. Last instruction, `event.stopWatching()`, simply removes this observer on NewSingleBet events.
+Once our observer is setup, we place a single bet from account 0 of 1 Ether on number 12 :
+
+```roulette.betSingle(12,{from: web3.eth.accounts[0], value: web3.toWei(1, "ether")});```
+
+and wait for the corresponding event to be triggered.
+
+The third test ends in a more accomplished scenario. A player bets 1 Ether on even numbers, then the wheel is launched and depending on the outcome we check if player is credited with Ethers (in case of a win) or if he lost Ether compared to the initial situation (if the roulette outputs an odd number).
+
+## Running dapp Roulette in a web browser
