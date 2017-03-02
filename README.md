@@ -134,7 +134,7 @@ var event = roulette.NewSingleBet(function(error, result) {
 });
 ```
 
-Each event produces a result and potentially an error. The result contains the parameters indicated in the event prototype, aka. `event NewSingleBet(uint bet, address player, uint number, uint value);` : the bet number, the account address of the gambler, the roulette number on which the bet is put and the amount in Ethers. If an error figures in the event callback, we consider that the test fails, otherwise it succeeds. Last instruction, `event.stopWatching()`, simply removes this observer on NewSingleBet events.
+Each event produces a result and potentially an error. The result contains the parameters indicated in the event prototype, aka. `event NewSingleBet(uint bet, address player, uint number, uint value)`: the bet number, the account address of the gambler, the roulette number on which the bet is put and the amount in Ethers. If an error figures in the event callback, we consider that the test fails, otherwise it succeeds. Last instruction, `event.stopWatching()`, simply removes this observer on NewSingleBet events.
 Once our observer is setup, we place a single bet from account 0 of 1 Ether on number 12 :
 
 ```
@@ -143,6 +143,41 @@ roulette.betSingle(12,{from: web3.eth.accounts[0], value: web3.toWei(1, "ether")
 
 and wait for the corresponding event to be triggered.
 
-The third test ends in a more accomplished scenario. A player bets 1 Ether on even numbers, then the wheel is launched and depending on the outcome we check if player is credited with Ethers (in case of a win) or if he lost Ether compared to the initial situation (if the roulette outputs an odd number).
+The third test ends in a more accomplished scenario. A player bets 1 Ether on even numbers, then the same player triggers the roulette and depending on the outcome we check if the player is credited with Ethers (in case it's a win) or if he lost Ether compared to the initial situation (if the roulette outputs an odd number).
+
+Before taking any action, we check how much Ether does have the account 1 :
+
+```
+var balance = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[1]), "ether").toNumber();
+```
+
+Then we place an observer on `Finished` events, corresponding to the end of a roulette game. To get the outcome roulette number we simply look at the result parameter :
+
+```
+var number = result.args.number.toNumber();
+```
+
+If it is an even number, we expect account 1 to have more money than previously :
+
+```
+assert.isAbove(new_balance,balance,`Result: ${number} => it's a win`);
+```
+
+and vice versa if it's an odd number :
+
+```
+assert.isBelow(new_balance,balance,`Result: ${number} => it's a loss`);
+```
+
+Finally, we put the bet for account 1 and trigger the roulette :
+
+```
+roulette.betEven({ from: web3.eth.accounts[1], value: web3.toWei(1, "ether")})
+.then(function() {
+	roulette.launch();
+});
+```
+
+It's required to use promises as the order of action matters. Luckily, truffle already provides a javascript API generated from our smart contract which automatically returns a promise on transaction calls.
 
 ## Running dapp Roulette in a web browser
