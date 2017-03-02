@@ -107,7 +107,7 @@ and makes sure it equals 1000 :
 
 ```assert.equal(balance.valueOf(), 1000, `Smart contract is credited with ${balance.valueOf()} Ether, expected 1000.`);```
 
-Second test covers Solidity (events)[http://solidity.readthedocs.io/en/develop/contracts.html#events]. An event is a callback function allowing our javascript code to be aware of predefined actions happening in a smart contract. In our case, we use events to notify all the observers when a participant puts a bet. Just like in real life, anyone around the table has the possibility to know who bets what.
+Second test covers Solidity [events](http://solidity.readthedocs.io/en/develop/contracts.html#events). An event is a callback function allowing our javascript code to be aware of predefined actions happening in a smart contract. In our case, we use events to notify all the observers when a participant puts a bet. Just like in real life, anyone around the table has the possibility to know who bets what.
 Because we wait for an event that might never happen, it's safe to set a timeout for this test. That's done by using the timeout option, 10 seconds should be enough :
 
 ```this.timeout(10000);```
