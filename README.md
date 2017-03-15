@@ -10,11 +10,11 @@ The project proposes a smart contract for a simplified version of a roulette cas
 2. [testrpc](https://github.com/ethereumjs/testrpc) is an ethereum client for testing which simulate a local blockchain
 3. [truffle](https://github.com/ConsenSys/truffle) is a development framework to build and deploy dApp easily
 
-> On Windows 10+, I found out that it's actually quite more convenient to install those dependencies in the [Ubuntu Bash Shell](https://msdn.microsoft.com/en-us/commandline/wsl/about), avoiding all the struggle in particular for [testrpc](https://github.com/ethereumjs/testrpc/wiki/Installing-TestRPC-on-Windows). It won't prevent you from using the polished IDEs and tools you like on Windows (atom/vscode/sublime...), but commands for building and testing your dApp would have to run in the bash.
+> On Windows 10+, I found out that it's actually quite more convenient to install those dependencies in the [Ubuntu Bash Shell](https://msdn.microsoft.com/en-us/commandline/wsl/about), avoiding all the struggle in particular for [testrpc](https://github.com/ethereumjs/testrpc/wiki/Installing-TestRPC-on-Windows). It won't prevent you from using the polished IDEs and tools you like on Windows (atom/vscode/sublime...), but commands for building and testing your dApp would have to run under bash.
 
 For Debian/Ubuntu distributions, once npm is installed, simply use the following command to install testrpc and truffle
 ```
-npm run preinstall
+sudo npm run preinstall
 ```
 
 ## Smart contract
@@ -169,7 +169,7 @@ and vice versa if it's an odd number :
 assert.isBelow(new_balance,balance,`Result: ${number} => it's a loss`);
 ```
 
-Finally, we put the bet for account 1 and trigger the roulette :
+Finally, we create a bet from account 1 and trigger the roulette :
 
 ```
 roulette.betEven({ from: web3.eth.accounts[1], value: web3.toWei(1, "ether")})
@@ -180,4 +180,5 @@ roulette.betEven({ from: web3.eth.accounts[1], value: web3.toWei(1, "ether")})
 
 It's required to use promises as the order of action matters. Luckily, truffle already provides a javascript API generated from our smart contract which automatically returns a promise on transaction calls.
 
-## Running dapp Roulette in a web browser
+## Running dapp Roulette through a web interface
+
