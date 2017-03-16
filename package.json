@@ -1,4 +1,4 @@
- {
+{
   "name": "roulette",
   "version": "1.0.0",
   "description": "",
@@ -8,8 +8,12 @@
     "compile": "truffle compile",
     "migrate": "truffle migrate",
     "console": "truffle console",
-    "serve": "truffle serve"
+    "serve": "truffle serve",
+    "test": "truffle test"
   },
   "author": "Matthieu Moinard",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "truffle-default-builder": "^2.0.0"
+  }
 }

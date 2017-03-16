@@ -82,25 +82,27 @@ function launch() {
 }
 
 window.onload = function() {
-  roulette = Roulette.deployed();
+  Roulette.deployed().then(function(instance) {
+    roulette = instance;
   
-  web3.eth.getAccounts(function(err, accounts) {
-    if (err != null) {
-      alert("There was an error fetching your accounts.");
-      return;
-    }
+    web3.eth.getAccounts(function(err, accounts) {
+      if (err != null) {
+        alert("There was an error fetching your accounts.");
+        return;
+      }
 
-    if (accounts.length == 0) {
-      alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-      return;
-    }
+      if (accounts.length == 0) {
+        alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
+        return;
+      }
 
-    account = accounts[0];
+      account = accounts[0];
 
-    document.getElementById("player").innerHTML = account;
+      document.getElementById("player").innerHTML = account;
 
-    refreshBalance();
-    watchNewBets();
-    watchFinishedRound();
+      refreshBalance();
+      watchNewBets();
+      watchFinishedRound();
+    });
   });
 }
