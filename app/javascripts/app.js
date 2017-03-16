@@ -1,5 +1,5 @@
-var accounts;
 var account;
+var roulette;
 
 function setStatus(message) {
   var status = document.getElementById("status");
@@ -13,10 +13,10 @@ function refreshBalance() {
 };
 
 function watchNewBets() {
-  var roulette = Roulette.deployed();
   roulette.NewSingleBet(function(error, result) {
       if (error) {
         console.log(error);
+        setStatus("Error end of round; see log.");
       } else {
         var row = document.getElementById("bets").insertRow(-1);
         row.insertCell(-1).innerHTML = result.args.bet.toNumber();
@@ -28,6 +28,7 @@ function watchNewBets() {
   roulette.NewEvenBet(function(error, result) {
       if (error) {
         console.log(error);
+        setStatus("Error end of round; see log.");
       } else {
         var row = document.getElementById("bets").insertRow(-1);
         row.insertCell(-1).innerHTML = result.args.bet.toNumber();
@@ -50,7 +51,6 @@ function watchNewBets() {
 }
 
 function watchFinishedRound() {
-  var roulette = Roulette.deployed();
   roulette.Finished(function(error, result) {
       if (error) {
         console.log(error);
@@ -64,7 +64,6 @@ function watchFinishedRound() {
 }
 
 function newBet() {
-  var roulette = Roulette.deployed();
   var select = document.getElementById("new_bet_type");
   var type = select.options[select.selectedIndex].value;
   var value = document.getElementById("new_bet_value").value;
@@ -79,11 +78,12 @@ function newBet() {
 }
 
 function launch() {
-  var roulette = Roulette.deployed();
   roulette.launch({from: account});
 }
 
 window.onload = function() {
+  roulette = Roulette.deployed();
+  
   web3.eth.getAccounts(function(err, accounts) {
     if (err != null) {
       alert("There was an error fetching your accounts.");
