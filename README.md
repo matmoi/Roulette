@@ -186,7 +186,9 @@ At this point we have compiled and deployed our smart contract in the blockchain
 
 Let's enumerate what information we should get via this interface :
 * our account id (or hash)
+* the amount of Ether owned by this account
 * the list of bets for the current run : single roulette number (or odd/even depending on the type of bet), player's hash and Ether amount
+* the last draw number
 
 Similarly, the list of actions would be :
 * select an account by hash

@@ -6,6 +6,14 @@ function setStatus(message) {
   status.innerHTML = message;
 };
 
+function getAccountFromUrl() {
+    var regex = new RegExp("[?&]account(=([^&#]*)|&|#|$)"),
+        results = regex.exec(window.location.href);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 function refreshBalance() {
   var value = web3.fromWei(web3.eth.getBalance(account),"ether").toNumber();
   var balance_element = document.getElementById("balance");
@@ -96,7 +104,10 @@ window.onload = function() {
         return;
       }
 
-      account = accounts[0];
+      account = getAccountFromUrl();
+      if (account == null || ! accounts.includes(account)) {
+        account = accounts[0];
+      }
 
       document.getElementById("player").innerHTML = account;
 
