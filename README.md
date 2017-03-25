@@ -182,16 +182,54 @@ It's required to use promises as the order of action matters. Luckily, truffle a
 
 ## Running dapp Roulette through a web interface
 
-At this point we have compiled and deployed our smart contract in the blockchain (at least in a local environment which simulates the real blockchain), and our tests are running successfully. Great ! Now how am I supposed to interact with it, such as place a bet and spin the wheel ? I could use some javascript directly through the truffle [console](http://truffleframework.com/docs/getting_started/console), but it's just not convenient nor user-friendly. What we need instead is a web frontend, connected to our Ethereum node using the Dapp javascript API generated above. Once again, truffle comes with a turn key solution. To simplify our setup, the web server and the Ethereum client run on the same machine. Our web frontend is located under `./app`, which the default location in truffle.
+At this point we have compiled and deployed our smart contract in the blockchain (at least in a local environment which simulates the real blockchain), and our tests are running successfully. Great ! Now how am I supposed to interact with it as a user ? I could use some javascript directly through the truffle [console](http://truffleframework.com/docs/getting_started/console), but it's just not convenient nor user-friendly. What we need instead is a web frontend, connected to our Ethereum node using the Dapp javascript API generated above. Once again, truffle comes with a turn key solution. To simplify our setup, the web server and the Ethereum client run on the same machine. Our web frontend is located under `./app`, which the default location in truffle.
 
 Let's enumerate what information we should get via this interface :
-* our account id (or hash)
+* the account id (or hash)
 * the amount of Ether owned by this account
 * the list of bets for the current run : single roulette number (or odd/even depending on the type of bet), player's hash and Ether amount
-* the last draw number
+* the last roulette output number
 
 Similarly, the list of actions would be :
 * select an account by hash
 * wager Ether on a number or odd/even type
 * launch roulette
 
+At this stage we don't need a strong authentification mechanism for users, so we'll go as stupid as it could be and simply get the account id by URI parameters (on our test environment all accounts are unlocked, meaning that we can transfer "fake" Ethers from them with no further requirements). We registered two users on testrpc, we'll use them both and see how events cascade from one to the other.
+
+Let's see what happens on page loading :
+
+```
+window.onload = function() {
+  Roulette.deployed().then(function(instance) {
+    roulette = instance;
+  
+    web3.eth.getAccounts(function(err, accounts) {
+      if (err != null) {
+        alert("There was an error fetching your accounts.");
+        return;
+      }
+
+      if (accounts.length == 0) {
+        alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
+        return;
+      }
+
+      account = getAccountFromUrl();
+      if (account == null || ! accounts.includes(account)) {
+        account = accounts[0];
+      }
+
+      document.getElementById("player").innerHTML = account;
+
+      refreshBalance();
+      watchNewBets();
+      watchFinishedRound();
+    });
+  });
+}
+```
+
+First we need to retrieve our Roulette smart contract from the blockchain, that's done by `Roulette.deployed()` which returns a javascript promise. Remember, smart contract was previously deployed using `npm run migrate` (see above).
+So at this point we have our Roulette, but we also need users to trigger actions. It's made possible with `web3.eth.getAccounts()`, an async function call to retrieve the list of accounts controlled by the ethereum node. All we have to do then is to compare the URI account parameter  coming from `getAccountFromUrl()` (if exists) with the list of actual accounts returned by the node, pick the corresponding one or first of the list by default.
+To finish, `refreshBalance()` updates the amount of Ethers owned by the current account, while `watchNewBets()` and `watchFinishedRound()` will observe actions performed on the smart contract and refresh the UI accordingly.
