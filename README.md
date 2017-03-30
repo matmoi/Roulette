@@ -1,6 +1,6 @@
 # Roulette
 
-Since I wanted to learn more about blockchain and its tools, especially around Ethereum as it got lot of attractions lately, I started to look for tutorials online. Having no background in this area whatsoever, one of the most accessible I found is presented [here](https://www.ethereum-france.com/ecrire-une-dapp-pour-ethereum-1-smart-contract/), written in french (sorry!). Unfortunately the project itself is slightly outdated and needed a bit of refresh to compile and run on more recent solidity (0.4.+) and truffle (3.+) versions. Once the code was working again, it occured to me that this or that additional feature would be great to implement, or this could be done otherwise, and here we are ! After spending few hours on this code base, and to be honest having fun exploring this entirely new world to me, I reviewed enough of the basics to cover pretty much all the parts needed in a decentralized application. At this point it makes sense to share a bit of my mind path, and what I learnt implementing this solution. Keep in mind that this project is far from meeting the requirements for being used in production, quality-wise, that's why we'll be using a local environment only and stay away from the "real" blockchain.
+Since I wanted to learn more about blockchain and dedicated tools, especially around Ethereum as it got lot of attractions lately, I started to look for tutorials online. One of the most accessible I found is presented [here](https://www.ethereum-france.com/ecrire-une-dapp-pour-ethereum-1-smart-contract/), written in french (sorry!). Unfortunately the project itself is slightly outdated and needed a bit of refreshing to compile and run on more recent solidity (0.4.+) and truffle (3.+) versions. Once the code was compatible with the most recent tools, it occured to me that few additional features would be great to implement, or this could be done otherwise, and without knowing it I became addicted to Ethereum ! After spending few hours on this code base, and to be honest having fun exploring this entirely new world to me, I reviewed enough of the basics to cover pretty much all the parts needed in building decentralized application. At this point it makes sense to share a bit of my mind path, and what I learnt implementing this solution. Keep in mind that this project is far from meeting the requirements for being used in production, quality-wise, that's why we'll be using a local environment only and stay away from the "real" blockchain.
 
 This project proposes a smart contract for a simplified version of a roulette casino game: a player can bet on a single number,and win 35 times his stake in case of success, or whether the number is odd or even, and win twice his stake.
 
@@ -180,7 +180,7 @@ roulette.betEven({ from: web3.eth.accounts[1], value: web3.toWei(1, "ether")})
 
 It's required to use promises as the order of action matters. Luckily, truffle already provides a javascript API generated from our smart contract which automatically returns a promise on transaction calls.
 
-## Running dapp Roulette through a web interface
+## Running Roulette through a web interface
 
 At this point we have compiled and deployed our smart contract in the blockchain (at least in a local environment which simulates the real blockchain), and our tests are running successfully. Great ! Now how am I supposed to interact with it as a user ? I could use some javascript directly through the truffle [console](http://truffleframework.com/docs/getting_started/console), but it's just not convenient nor user-friendly. What we need instead is a web frontend, connected to our Ethereum node using the Dapp javascript API generated above. Once again, truffle comes with a turn key solution. To simplify our setup, the web server and the Ethereum client run on the same machine. Our web frontend is located under `./app`, which the default location in truffle.
 
@@ -232,4 +232,11 @@ window.onload = function() {
 
 First we need to retrieve our Roulette smart contract from the blockchain, that's done by `Roulette.deployed()` which returns a javascript promise. Remember, smart contract was previously deployed using `npm run migrate` (see above).
 So at this point we have our Roulette, but we also need users to trigger actions. It's made possible with `web3.eth.getAccounts()`, an async function call to retrieve the list of accounts controlled by the ethereum node. All we have to do then is to compare the URI account parameter  coming from `getAccountFromUrl()` (if exists) with the list of actual accounts returned by the node, pick the corresponding one or first of the list by default.
-To finish, `refreshBalance()` updates the amount of Ethers owned by the current account, while `watchNewBets()` and `watchFinishedRound()` will observe actions performed on the smart contract and refresh the UI accordingly.
+To finish, `refreshBalance()` updates the amount of Ethers owned by the current account, while `watchNewBets()` and `watchFinishedRound()` will observe actions performed on smart contract and refresh the UI accordingly.
+Finally, the last operation we need to operate is place a bet, that's done in `newBet()`.
+
+After this tiny bit of explanation, it's time to see some action ! All we have to do is run
+```
+npm run serve
+```
+which is, once again, an alias to a Truffle command `truffle serve`. First, the command builds our web application by combining the web frontend we wrote above together with a web3 based glue layer to interact with our node. Secondly, it runs a web server to serve our app statically for testing purposes.

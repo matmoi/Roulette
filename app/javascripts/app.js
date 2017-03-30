@@ -76,13 +76,20 @@ function newBet() {
   var type = select.options[select.selectedIndex].value;
   var value = document.getElementById("new_bet_value").value;
   if (type === "even") {
-    roulette.betEven({from: account, value: web3.toWei(value), gas: 2000000});
+    roulette.betEven({from: account, value: web3.toWei(value), gas: 2000000}).then(function() {
+      refreshBalance();
+    });
   } else if (type === "odd") {
-    roulette.betOdd({from: account, value: web3.toWei(value), gas: 2000000});
+    roulette.betOdd({from: account, value: web3.toWei(value), gas: 2000000})
+    .then(function() {
+      refreshBalance();
+    });
   } else {
-    roulette.betSingle(parseInt(type),{from: account, value: web3.toWei(value), gas: 2000000});
+    roulette.betSingle(parseInt(type),{from: account, value: web3.toWei(value), gas: 2000000})
+    .then(function() {
+      refreshBalance();
+    });
   }
-  refreshBalance();
 }
 
 function launch() {

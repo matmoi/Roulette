@@ -4,9 +4,9 @@
   "description": "",
   "scripts": {
     "preinstall": "npm install ethereumjs-testrpc -g && npm install truffle -g",
-    "testrpc": "testrpc --account=\"0x40e16bbfe219ecaa733169b9192604338d0c55d48a3c90dae45badaede6822ff,10000000000000000000000\" --account=\"0xf5d09e61086d537581377e29c93edcf19de73b42230c7b9fe390e4dd560ffc0a,10000000000000000000000\"",
+    "testrpc": "testrpc --account=\"0x40e16bbfe219ecaa733169b9192604338d0c55d48a3c90dae45badaede6822ff,10000000000000000000000\" --account=\"0xf5d09e61086d537581377e29c93edcf19de73b42230c7b9fe390e4dd560ffc0a,10000000000000000000000\" -g 200000000",
     "compile": "truffle compile",
-    "migrate": "truffle migrate",
+    "migrate": "truffle migrate --reset",
     "console": "truffle console",
     "serve": "truffle serve",
     "test": "truffle test"
